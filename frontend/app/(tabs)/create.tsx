@@ -57,7 +57,7 @@ export default function CreateJourneyScreen() {
       } as any
     );
     try {
-      createJourney(formData);
+      await createJourney(formData);
       Alert.alert('Success', 'Journey created!', [
         { text: 'OK', onPress: () => router.back() },
       ]);

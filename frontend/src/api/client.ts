@@ -14,10 +14,10 @@ const API_TIMEOUT = 30000;
 
 const getBaseURL = () => {
   if (__DEV__) {
-    // Change this to your PC's IPv4 address
-    return "http://192.168.0.105:5000/api/v1";
+    // Use your computer's IP address (192.168.0.101)
+    return "http://192.168.0.101:5000/api/v1";
   }
-
+  
   return "https://api.memora.com/api/v1";
 };
 
@@ -97,27 +97,34 @@ class ApiClient {
 
   // INTERCEPTORS
 
-  private initializeInterceptors() {
-    this.client.interceptors.request.use(
-      async (config) => {
-        const token = await tokenManager.getToken();
-
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-
-        config.headers["X-Platform"] = Platform.OS;
-
-        if (__DEV__) {
-          console.log(
-            `🚀 ${config.method?.toUpperCase()} ${config.url}`
-          );
-        }
-
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
+private initializeInterceptors() {
+  this.client.interceptors.request.use(
+    async (config) => {
+      const token = await tokenManager.getToken();
+      
+      // Add this for debugging
+      console.log('🔑 Token found:', token ? 'Yes' : 'No');
+      console.log('📡 Request URL:', config.url);
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('✅ Token added to headers');
+      } else {
+        console.log('❌ No token available');
+      }
+      
+      config.headers["X-Platform"] = Platform.OS;
+      
+      if (__DEV__) {
+        console.log(
+          `🚀 ${config.method?.toUpperCase()} ${config.url}`
+        );
+      }
+      
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
 
     this.client.interceptors.response.use(
       (response) => {
@@ -195,9 +202,9 @@ class ApiClient {
   ): Promise<T> {
     const response = await this.client.post<T>(url, formData, {
       headers: {
+        // React Native needs this to override the client's JSON default.
         "Content-Type": "multipart/form-data",
       },
-
       onUploadProgress: (event) => {
         if (event.total && onProgress) {
           const progress = Math.round(

@@ -6,58 +6,87 @@ const cloudinary = require('../config/cloudinary');
 // @access  Private
 const createJourney = async (req, res) => {
   try {
-    console.log("BODY:", req.body);
-    console.log("FILE:", req.file);
+    console.log("📝 Creating journey for user:", req.user._id);
+    console.log("📦 Request body:", req.body);
 
     const { title, description, location, startDate, endDate } = req.body;
 
+    // Validate required fields
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title is required',
+      });
+    }
+
+    if (!description) {
+      return res.status(400).json({
+        success: false,
+        message: 'Description is required',
+      });
+    }
+
+    if (!startDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Start date is required',
+      });
+    }
+
+    if (!endDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'End date is required',
+      });
+    }
+
     let coverImage = '';
 
+    // Handle cover image upload if provided
     if (req.file) {
-      console.log("Uploading to Cloudinary...");
-
+      console.log("🖼️ Uploading to Cloudinary...");
       const result = await cloudinary.uploader.upload(req.file.path, {
         folder: 'memora/journeys',
         transformation: [{ width: 800, height: 400, crop: 'fill' }],
       });
-
-      console.log("Cloudinary Success:", result);
-
       coverImage = result.secure_url;
+      console.log("✅ Cloudinary upload successful");
     }
 
-    // Your Journey.create(...) code remains the same
-
-  } catch (error) {
-    console.error("FULL ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
+    // ✅ Create journey with owner as member
+    const journey = await Journey.create({
+      title,
+      description,
+      location,
+      startDate,
+      endDate,
+      coverImage, // Will be empty string if no image uploaded
+      ownerId: req.user._id,
+      members: [{
+        userId: req.user._id,
+        role: 'admin',
+        joinedAt: new Date(),
+      }],
     });
-  }
-};
 
-module.exports = {
-  createJourney,
-};
+    console.log("✅ Journey created successfully:", journey._id);
 
-// @desc    Get all user journeys
-// @route   GET /api/v1/journeys
-// @access  Private
-const getJourneys = async (req, res) => {
-  try {
-    const journeys = await Journey.find({
-      'members.userId': req.user._id,
-    })
-      .populate('ownerId', 'fullName email')
-      .sort({ createdAt: -1 });
-
-    res.json({
+    res.status(201).json({
       success: true,
-      journeys,
+      data: journey,
     });
   } catch (error) {
+    console.error("❌ Create journey error:", error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: messages.join(', '),
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: error.message || 'Server error',
@@ -65,30 +94,54 @@ const getJourneys = async (req, res) => {
   }
 };
 
-// @desc    Get single journey
+// @desc    Get all user journeys
+// @route   GET /api/v1/journeys
+// @access  Private
+const getJourneys = async (req, res) => {
+  try {
+    console.log("🔍 Getting journeys for user:", req.user._id);
+    console.log("📧 User email:", req.user.email);
+
+    // Find journeys where user is a member
+    const journeys = await Journey.find({
+      'members.userId': req.user._id,
+    })
+      .populate('ownerId', 'fullName email profilePicture')
+      .populate('members.userId', 'fullName email profilePicture')
+      .sort({ createdAt: -1 });
+
+    console.log(`✅ Found ${journeys.length} journeys`);
+
+    res.json({
+      success: true,
+      count: journeys.length,
+      journeys,
+    });
+  } catch (error) {
+    console.error("❌ Get journeys error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error',
+    });
+  }
+};
+
+// @desc    Get a journey the current user belongs to
 // @route   GET /api/v1/journeys/:id
 // @access  Private
 const getJourney = async (req, res) => {
   try {
-    const journey = await Journey.findById(req.params.id)
-      .populate('ownerId', 'fullName email')
+    const journey = await Journey.findOne({
+      _id: req.params.id,
+      'members.userId': req.user._id,
+    })
+      .populate('ownerId', 'fullName email profilePicture')
       .populate('members.userId', 'fullName email profilePicture');
 
     if (!journey) {
       return res.status(404).json({
         success: false,
         message: 'Journey not found',
-      });
-    }
-
-    const isMember = journey.members.some(
-      (m) => m.userId._id.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        success: false,
-        message: 'You are not a member of this journey',
       });
     }
 

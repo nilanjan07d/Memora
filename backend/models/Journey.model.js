@@ -16,7 +16,8 @@ const JourneySchema = new mongoose.Schema(
     },
     coverImage: {
       type: String,
-      required: [true, 'Cover image is required'],
+      default: '', // ✅ Make it optional with a default value
+      // Remove the required: true line
     },
     location: {
       type: String,

@@ -14,7 +14,14 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:8081',
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:8081',
+    'http://192.168.0.101:5000',     // Your backend
+    'http://192.168.0.101:8081',     // Your frontend
+    'http://10.0.2.2:5000',          // Android emulator
+    'http://10.0.2.2:8081',          // Android emulator frontend
+    /^exp:\/\/192\.168\.0\.101:\d+$/ // Expo Go
+  ],
   credentials: true
 }));
 app.use(express.json());

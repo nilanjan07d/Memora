@@ -14,8 +14,8 @@ const API_TIMEOUT = 30000;
 
 const getBaseURL = () => {
   if (__DEV__) {
-    // Use your computer's IP address (192.168.0.101)
-    return "http://192.168.0.101:5000/api/v1";
+    // Use your computer's IP address (192.168.0.106)
+    return "http://192.168.0.106:5000/api/v1";
   }
   
   return "https://api.memora.com/api/v1";

@@ -67,8 +67,10 @@ export const useJourneyStore =
           await journeyService.getAll();
 
         set({
-          journeys: Array.isArray(response.data)
-            ? response.data
+          // apiClient returns the response body directly. The API exposes the
+          // list as `{ success, count, journeys }`, not under `data`.
+          journeys: Array.isArray(response.journeys)
+            ? response.journeys
             : [],
 
           isLoading: false,
@@ -100,10 +102,7 @@ export const useJourneyStore =
         const response: any =
           await journeyService.getOne(id);
 
-        const journey =
-          response.data?.data ??
-          response.data?.journey ??
-          response.data;
+        const journey = response.journey;
 
         set({
           currentJourney: journey,
@@ -136,10 +135,7 @@ export const useJourneyStore =
         const response: any =
           await journeyService.create(data);
 
-        const newJourney =
-          response.data?.data ??
-          response.data?.journey ??
-          response.data;
+        const newJourney = response.data;
         set((state) => ({
           journeys: [newJourney, ...state.journeys],
           currentJourney: newJourney,
@@ -176,7 +172,7 @@ export const useJourneyStore =
         const response: any =
           await journeyService.update(id, data);
 
-        const updatedJourney = response.data;
+        const updatedJourney = response.journey;
 
         set((state) => ({
           journeys: state.journeys.map((journey) =>

@@ -51,6 +51,9 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           const response = await authService.login(credentials);
+          console.log("Response:", JSON.stringify(response, null, 2));
+          console.log("Token:", response.token);
+          console.log("Token type:", typeof response.token);
 
           await tokenManager.setToken(response.token);
 

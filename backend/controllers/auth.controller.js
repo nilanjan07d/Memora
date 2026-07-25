@@ -36,7 +36,7 @@ const register = async (req, res) => {
     });
 
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(user._id.toString());
 
     res.status(201).json({
       success: true,
@@ -84,7 +84,7 @@ const login = async (req, res) => {
     }
 
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(user._id.toString());
 
     res.json({
       success: true,
@@ -111,7 +111,7 @@ const login = async (req, res) => {
 // @access  Private
 const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
+    const user = await User.findById(req.user._id.toString()).select('-password');
     res.json({
       success: true,
       user,
@@ -132,7 +132,7 @@ const updateProfile = async (req, res) => {
     const { fullName, bio, username } = req.body;
 
     const user = await User.findByIdAndUpdate(
-      req.user._id,
+      req.user._id.toString(),
       { fullName, bio, username },
       { new: true, runValidators: true }
     ).select('-password');

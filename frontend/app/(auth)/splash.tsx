@@ -1,15 +1,20 @@
-import { useEffect } from 'react';
-import { View, Text, StyleSheet, ImageBackground, Dimensions, Animated } from 'react-native';
-import { router } from 'expo-router';
-import { Colors } from '../../src/theme';
-
-const { width, height } = Dimensions.get('window');
+import { useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ImageBackground,
+  Image,
+  Animated,
+} from "react-native";
+import { router } from "expo-router";
 
 export default function SplashScreen() {
   // Animation values
-  const fadeAnim = new Animated.Value(0);
-  const scaleAnim = new Animated.Value(0.8);
-  const slideAnim = new Animated.Value(30);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const loadingAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Entrance animations
@@ -30,74 +35,94 @@ export default function SplashScreen() {
         duration: 600,
         useNativeDriver: true,
       }),
+      Animated.timing(loadingAnim, {
+        toValue: 1,
+        duration: 3000,
+        useNativeDriver: false,
+      }),
     ]).start();
 
-    // Auto navigate
+    // Navigate after splash
     const timer = setTimeout(() => {
-      router.replace('/login');
+      // TODO: Replace with auth check
+      router.replace("/(auth)/login");
     }, 3000);
+
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <ImageBackground
-      source={{ uri: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800' }}
+      source={{
+        uri: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+      }}
       style={styles.container}
-      blurRadius={1}
+      blurRadius={2}
     >
-      {/* Light overlay - background visible but subtle */}
       <View style={styles.overlay}>
         <Animated.View
           style={[
             styles.content,
             {
               opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }, { translateY: slideAnim }],
+              transform: [
+                { scale: scaleAnim },
+                { translateY: slideAnim },
+              ],
             },
           ]}
         >
-          {/* Logo Container with warm glow */}
+          {/* Logo */}
           <View style={styles.logoWrapper}>
             <View style={styles.glowRing} />
+
             <View style={styles.logoContainer}>
-              <Text style={styles.logoEmoji}>📖</Text>
+              <Image
+                source={require("../../assets/icon.png")}
+                style={styles.logo}
+              />
             </View>
           </View>
 
-          {/* App Name - White */}
-          <Text style={styles.title}>
-            Memora
-          </Text>
+          {/* App Name */}
+          <Text style={styles.title}>Memora</Text>
 
-          {/* Decorative divider - White */}
+          {/* Divider */}
           <View style={styles.dividerContainer}>
-            <View style={[styles.dividerLine, { backgroundColor: '#FFFFFF' }]} />
-            <View style={[styles.dividerDot, { backgroundColor: '#FFFFFF' }]} />
-            <View style={[styles.dividerLine, { backgroundColor: '#FFFFFF' }]} />
+            <View style={styles.dividerLine} />
+            <View style={styles.dividerDot} />
+            <View style={styles.dividerLine} />
           </View>
 
-          {/* Tagline - White with opacity */}
+          {/* Subtitle */}
           <Text style={styles.subtitle}>
             Where Memories Become Chapters
           </Text>
 
-          {/* Bottom Section */}
+          {/* Bottom */}
           <View style={styles.bottomSection}>
-            {/* Loading bar - White */}
             <View style={styles.loadingContainer}>
-              <View style={[styles.loadingBar, { backgroundColor: '#FFFFFF' }]} />
+              <Animated.View
+                style={[
+                  styles.loadingBar,
+                  {
+                    width: loadingAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ["0%", "100%"],
+                    }),
+                  },
+                ]}
+              />
             </View>
 
-            {/* Tagline - White with opacity */}
             <Text style={styles.tagline}>
               ✨ Every memory tells a story
             </Text>
 
-            {/* Decorative dots - White */}
             <View style={styles.dotsContainer}>
-              <View style={[styles.dot, { backgroundColor: '#FFFFFF' }]} />
-              <View style={[styles.dot, { backgroundColor: 'rgba(255,255,255,0.6)' }]} />
-              <View style={[styles.dot, { backgroundColor: '#FFFFFF' }]} />
+              <View style={styles.dot} />
+              <View style={[styles.dot, { opacity: 0.5 }]} />
+              <View style={styles.dot} />
             </View>
           </View>
         </Animated.View>
@@ -110,130 +135,138 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(203, 90, 50, 0.35)', // Warm orange tint - LIGHT
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(203,90,50,0.35)",
+    justifyContent: "center",
+    alignItems: "center",
   },
+
   content: {
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     paddingHorizontal: 30,
-    width: '100%',
   },
 
   // Logo
   logoWrapper: {
-    position: 'relative',
+    position: "relative",
     marginBottom: 24,
   },
+
   glowRing: {
-    position: 'absolute',
+    position: "absolute",
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255,255,255,0.08)",
     top: -40,
     left: -40,
   },
+
   logoContainer: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.15)",
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-    backdropFilter: 'blur(10px)',
-  },
-  logoEmoji: {
-    fontSize: 48,
+    borderColor: "rgba(255,255,255,0.4)",
   },
 
-  // Title - WHITE
+  logo: {
+    width: 70,
+    height: 70,
+    resizeMode: "contain",
+  },
+
+  // Title
   title: {
     fontSize: 44,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    fontFamily: 'Georgia, serif',
+    fontWeight: "700",
+    color: "#FFFFFF",
     letterSpacing: 1.5,
     marginBottom: 12,
-    textShadowColor: 'rgba(0,0,0,0.1)',
-    textShadowOffset: { width: 0, height: 2 },
+    textShadowColor: "rgba(0,0,0,0.2)",
+    textShadowOffset: {
+      width: 0,
+      height: 2,
+    },
     textShadowRadius: 4,
   },
 
-  // Divider - WHITE
+  // Divider
   dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
     width: 120,
+    marginBottom: 16,
   },
+
   dividerLine: {
     flex: 1,
     height: 1,
+    backgroundColor: "#FFFFFF",
     opacity: 0.6,
   },
+
   dividerDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
+    backgroundColor: "#FFFFFF",
     marginHorizontal: 8,
   },
 
-  // Subtitle - WHITE with opacity
+  // Subtitle
   subtitle: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.85)',
-    fontFamily: 'Inter, sans-serif',
+    color: "rgba(255,255,255,0.9)",
     letterSpacing: 0.5,
     marginBottom: 40,
-    textShadowColor: 'rgba(0,0,0,0.05)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textAlign: "center",
   },
 
-  // Bottom Section
+  // Bottom
   bottomSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
 
-  // Loading - WHITE
   loadingContainer: {
-    width: 140,
+    width: 160,
     height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 2,
-    overflow: 'hidden',
+    backgroundColor: "rgba(255,255,255,0.25)",
+    borderRadius: 10,
+    overflow: "hidden",
     marginBottom: 20,
   },
+
   loadingBar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 2,
+    height: "100%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
   },
 
-  // Tagline - WHITE with opacity
   tagline: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontFamily: 'Inter, sans-serif',
-    fontStyle: 'italic',
-    marginBottom: 16,
+    color: "rgba(255,255,255,0.75)",
+    fontStyle: "italic",
+    marginBottom: 18,
   },
 
-  // Dots - WHITE
   dotsContainer: {
-    flexDirection: 'row',
-    gap: 8,
+    flexDirection: "row",
   },
+
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    opacity: 0.6,
+    backgroundColor: "#FFFFFF",
+    marginHorizontal: 4,
+    opacity: 0.8,
   },
-}); 
+});

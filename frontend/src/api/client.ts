@@ -13,12 +13,7 @@ import { router } from "expo-router";
 const API_TIMEOUT = 30000;
 
 const getBaseURL = () => {
-  if (__DEV__) {
-    // Use your computer's IP address (192.168.0.106)
-    return "https://memora-7o48.onrender.com/api/v1";
-  }
-  
-  return "https://api.memora.com/api/v1";
+  return "https://memora-7o48.onrender.com/api/v1";
 };
 
 // TOKEN STORAGE
@@ -34,9 +29,14 @@ export const tokenManager = {
     }
   },
 
-  async setToken(token: string) {
-    await SecureStore.setItemAsync(TOKEN_KEY, token);
-  },
+  async setToken(token: any) {
+  if (token === null || token === undefined) {
+    console.warn('setToken called with null/undefined');
+    return;
+  }
+  const value = typeof token === 'string' ? token : JSON.stringify(token);
+  await SecureStore.setItemAsync(TOKEN_KEY, value);
+},
 
   async removeToken() {
     await SecureStore.deleteItemAsync(TOKEN_KEY);

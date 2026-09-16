@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   RefreshControl,
+  TextInput,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -34,6 +35,14 @@ export default function HomeScreen() {
   } = useMemoryStore();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const visibleJourneys = normalizedSearch
+    ? journeys.filter((journey) => `${journey.title} ${journey.location || ''} ${journey.description || ''}`.toLowerCase().includes(normalizedSearch))
+    : journeys.slice(0, 3);
+  const visibleMemories = normalizedSearch
+    ? memories.filter((memory) => `${memory.caption} ${memory.story || ''} ${memory.location || ''} ${(memory.tags || []).join(' ')}`.toLowerCase().includes(normalizedSearch))
+    : memories.slice(0, 3);
 
   async function loadData() {
     try {
@@ -177,17 +186,24 @@ export default function HomeScreen() {
 </View>
 
 {/* Search */}
-<TouchableOpacity style={styles.searchBar}>
+<View style={styles.searchBar}>
   <Ionicons
     name="search-outline"
     size={20}
     color={Colors.text.tertiary}
   />
 
-  <Text style={styles.searchText}>
-    Search for a feeling, place, or person
-  </Text>
-</TouchableOpacity>
+  <TextInput
+    style={styles.searchInput}
+    value={searchQuery}
+    onChangeText={setSearchQuery}
+    placeholder="Search journeys and memories"
+    placeholderTextColor={Colors.text.tertiary}
+    returnKeyType="search"
+    autoCorrect={false}
+  />
+  {searchQuery.length > 0 && <TouchableOpacity onPress={() => setSearchQuery('')} accessibilityLabel="Clear search"><Ionicons name="close-circle" size={20} color={Colors.text.tertiary} /></TouchableOpacity>}
+</View>
 
 {/* Memory Categories */}
 <View style={styles.categorySection}>
@@ -244,7 +260,7 @@ export default function HomeScreen() {
         { color: Colors.text.primary },
       ]}
     >
-      Recent Journeys
+      {normalizedSearch ? 'Matching Journeys' : 'Recent Journeys'}
     </Text>
 
     <TouchableOpacity
@@ -261,10 +277,10 @@ export default function HomeScreen() {
     </TouchableOpacity>
   </View>
 
-  {journeys.length === 0 ? (
+  {visibleJourneys.length === 0 ? (
     <View style={styles.emptyState}>
       <Text style={styles.emptyStateText}>
-        No journeys yet
+        {normalizedSearch ? 'No journeys match your search' : 'No journeys yet'}
       </Text>
 
       <TouchableOpacity
@@ -282,7 +298,7 @@ export default function HomeScreen() {
       </TouchableOpacity>
     </View>
   ) : (
-    journeys.slice(0, 3).map((journey) => (
+    visibleJourneys.map((journey) => (
       <TouchableOpacity
         key={journey._id}
         style={styles.journeyCard}
@@ -342,18 +358,18 @@ export default function HomeScreen() {
         },
       ]}
     >
-      Recent Memories
+      {normalizedSearch ? 'Matching Memories' : 'Recent Memories'}
     </Text>
   </View>
 
-  {memories.length === 0 ? (
+  {visibleMemories.length === 0 ? (
     <View style={styles.emptyState}>
       <Text style={styles.emptyStateText}>
-        No memories yet
+        {normalizedSearch ? 'No memories match your search' : 'No memories yet'}
       </Text>
     </View>
   ) : (
-    memories.slice(0, 3).map((memory) => (
+    visibleMemories.map((memory) => (
       <TouchableOpacity
         key={memory._id}
         style={styles.memoryCard}
@@ -501,7 +517,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border.light,
     gap: 10,
   },
-  searchText: {
+  searchInput: {
+    flex: 1,
     fontSize: 14,
     color: Colors.text.tertiary,
     fontFamily: 'Inter, sans-serif',

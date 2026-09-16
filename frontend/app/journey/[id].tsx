@@ -118,9 +118,7 @@ export default function JourneyDetailScreen() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {currentJourney.title}
         </Text>
-        <TouchableOpacity style={styles.headerButton} onPress={() => router.push(`/journey/${journeyId}/members`)}>
-          <Ionicons name="people-outline" size={24} color={Colors.text.primary} />
-        </TouchableOpacity>
+        <View style={styles.headerButton} />
       </View>
 
       {/* Cover */}
@@ -138,6 +136,14 @@ export default function JourneyDetailScreen() {
             </Text>
           </View>
         )}
+        <TouchableOpacity style={styles.collaborateButton} onPress={() => router.push(`/journey/${journeyId}/members`)} activeOpacity={0.8}>
+          <View style={styles.collaborateIcon}><Ionicons name="people" size={17} color="#FFFFFF" /></View>
+          <View style={styles.collaborateCopy}>
+            <Text style={styles.collaborateTitle}>Travel together</Text>
+            <Text style={styles.collaborateSubtitle}>{currentJourney.members?.length || 1} member{currentJourney.members?.length === 1 ? '' : 's'} · Invite collaborators</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={19} color={Colors.primary.main} />
+        </TouchableOpacity>
       </View>
 
       {/* Tabs */}
@@ -373,6 +379,11 @@ const styles = StyleSheet.create({
   location: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
 
   locationText: { fontSize: 14, marginLeft: 4, fontFamily: 'Inter, sans-serif' },
+  collaborateButton: { flexDirection: 'row', alignItems: 'center', marginTop: 18, padding: 13, borderRadius: 14, backgroundColor: '#FFF3ED', borderWidth: 1, borderColor: '#F7D5C5' },
+  collaborateIcon: { width: 34, height: 34, borderRadius: 17, backgroundColor: Colors.primary.main, justifyContent: 'center', alignItems: 'center' },
+  collaborateCopy: { flex: 1, marginLeft: 11 },
+  collaborateTitle: { color: Colors.text.primary, fontSize: 15, fontWeight: '700', fontFamily: 'Georgia, serif' },
+  collaborateSubtitle: { color: Colors.text.secondary, fontSize: 12, marginTop: 2, fontFamily: 'Inter, sans-serif' },
 
   tabs: {
     flexDirection: 'row',

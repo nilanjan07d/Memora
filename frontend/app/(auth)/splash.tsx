@@ -8,8 +8,11 @@ import {
   Animated,
 } from "react-native";
 import { router } from "expo-router";
+import { useAuthStore } from "../../src/store";
 
 export default function SplashScreen() {
+  const loadUser = useAuthStore((state) => state.loadUser);
+
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -42,13 +45,23 @@ export default function SplashScreen() {
       }),
     ]).start();
 
-    // Navigate after splash
-    const timer = setTimeout(() => {
-      // TODO: Replace with auth check
-      router.replace("/(auth)/login");
-    }, 3000);
+    // Restore session (if any) while the splash animation plays, then
+    // route to tabs if already logged in, or to login otherwise.
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
 
-    return () => clearTimeout(timer);
+    loadUser().finally(() => {
+      if (cancelled) return;
+      timer = setTimeout(() => {
+        const { isAuthenticated } = useAuthStore.getState();
+        router.replace(isAuthenticated ? "/(tabs)" : "/(auth)/login");
+      }, 3000);
+    });
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   return (

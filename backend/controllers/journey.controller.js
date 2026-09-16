@@ -108,6 +108,7 @@ const getJourneys = async (req, res) => {
     })
       .populate('ownerId', 'fullName email profilePicture')
       .populate('members.userId', 'fullName email profilePicture')
+      .populate('memoryCount')
       .sort({ createdAt: -1 });
 
     console.log(`✅ Found ${journeys.length} journeys`);
@@ -136,7 +137,8 @@ const getJourney = async (req, res) => {
       'members.userId': req.user._id,
     })
       .populate('ownerId', 'fullName email profilePicture')
-      .populate('members.userId', 'fullName email profilePicture');
+      .populate('members.userId', 'fullName email profilePicture')
+      .populate('memoryCount');
 
     if (!journey) {
       return res.status(404).json({

@@ -75,11 +75,11 @@ export default function ProfileScreen() {
 
     setIsLoading(true);
     try {
-      updateUser({ fullName: newName, bio: newBio });
+      await updateUser({ fullName: newName.trim(), bio: newBio });
       Alert.alert('Success', 'Profile updated!');
       setEditModalVisible(false);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to update profile');
     } finally {
       setIsLoading(false);
     }

@@ -25,6 +25,10 @@ export interface Memory {
 
   uploadedBy: User | string;
 
+  // Populated virtual (see Memory.model.js) - this is what the API
+  // actually fills in with uploader details, not `uploadedBy`.
+  uploader?: User;
+
   tags: string[];
 
   createdAt: string;
@@ -63,6 +67,66 @@ export interface UpdateMemoryData {
   memoryDate?: string;
 
   tags?: string[];
+}
+
+// ============================================
+// MEMORY VARIANTS
+// ============================================
+
+export interface PhotoMemory extends Memory {
+  imageUrl: string;
+}
+
+export interface StoryMemory extends Memory {
+  story: string;
+}
+
+// ============================================
+// MEMORY COMMENT
+// ============================================
+
+export interface MemoryComment {
+  _id: string;
+
+  memoryId: string;
+
+  authorId: User | string;
+
+  text: string;
+
+  createdAt: string;
+}
+
+// ============================================
+// MEMORY REACTION
+// ============================================
+
+export interface MemoryReaction {
+  _id: string;
+
+  memoryId: string;
+
+  userId: User | string;
+
+  type: 'like' | 'love' | 'laugh' | 'wow' | 'sad';
+
+  createdAt: string;
+}
+
+// ============================================
+// MEMORY FILTERS
+// ============================================
+
+export interface MemoryFilters {
+  journeyId?: string;
+
+  tag?: string;
+
+  search?: string;
+
+  sortBy?: 'memoryDate' | 'createdAt';
+
+  sortOrder?: 'asc' | 'desc';
 }
 
 // ============================================

@@ -88,6 +88,46 @@ export interface InviteMemberData {
 }
 
 // ===============================
+// Journey Filters
+// ===============================
+
+export interface JourneyFilters {
+  status?: 'active' | 'completed' | 'archived';
+
+  search?: string;
+
+  sortBy?: 'createdAt' | 'startDate' | 'title';
+
+  sortOrder?: 'asc' | 'desc';
+}
+
+// ===============================
+// Journey Invite
+// ===============================
+
+export interface JourneyInvite {
+  journeyId: string;
+
+  email: string;
+
+  message?: string;
+
+  invitedAt: string;
+}
+
+// ===============================
+// Journey Stats
+// ===============================
+
+export interface JourneyStats {
+  memoryCount: number;
+
+  memberCount: number;
+
+  daysSinceStart?: number;
+}
+
+// ===============================
 // Journey Store
 // ===============================
 

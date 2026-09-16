@@ -77,8 +77,7 @@ export default function JourneyDetailScreen() {
     const formData = new FormData();
     formData.append('caption', caption);
     formData.append('story', story);
-    formData.append('memory_date', new Date().toISOString());
-    formData.append("journey_id", journeyId);
+    formData.append('memoryDate', new Date().toISOString());
     formData.append('image', {
       uri: image,
       name: 'memory.jpg',

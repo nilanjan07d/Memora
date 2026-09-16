@@ -68,8 +68,9 @@ export const useMemoryStore =
           );
 
         set({
-          memories: Array.isArray(response.data)
-            ? response.data
+          // The API exposes the list as `{ success, memories }`, not under `data`.
+          memories: Array.isArray(response.memories)
+            ? response.memories
             : [],
 
           isLoading: false,
@@ -106,7 +107,7 @@ export const useMemoryStore =
           await memoryService.getOne(id);
 
         set({
-          currentMemory: response.data,
+          currentMemory: response.memory,
 
           isLoading: false,
         });
@@ -144,7 +145,7 @@ export const useMemoryStore =
             data
           );
 
-        const newMemory = response.data;
+        const newMemory = response.memory;
 
         set((state) => ({
           memories: [newMemory, ...state.memories],
@@ -188,7 +189,7 @@ export const useMemoryStore =
             data
           );
 
-        const updatedMemory = response.data;
+        const updatedMemory = response.memory;
 
         set((state) => ({
           memories: state.memories.map((memory) =>

@@ -83,9 +83,9 @@ export default function MemoryDetailScreen() {
                 ]}
             >
               <Text style={styles.avatarText}>
-                {typeof currentMemory.uploadedBy === "object" &&
-                currentMemory.uploadedBy?.fullName
-                  ? currentMemory.uploadedBy.fullName.charAt(0)
+                {typeof (currentMemory as any).uploader === "object" &&
+                (currentMemory as any).uploader?.fullName
+                  ? (currentMemory as any).uploader.fullName.charAt(0)
                   : "U"}
               </Text>
             </View>
@@ -98,9 +98,9 @@ export default function MemoryDetailScreen() {
                   },
                 ]}
               >
-                {typeof currentMemory.uploadedBy === "object" &&
-                currentMemory.uploadedBy?.fullName
-                  ? currentMemory.uploadedBy.fullName
+                {typeof (currentMemory as any).uploader === "object" &&
+                (currentMemory as any).uploader?.fullName
+                  ? (currentMemory as any).uploader.fullName
                   : "Unknown"}
               </Text>
               <Text

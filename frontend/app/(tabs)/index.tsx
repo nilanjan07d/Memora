@@ -33,6 +33,7 @@ export default function HomeScreen() {
 
   const {
     memories,
+    fetchJourneyMemories,
   } = useMemoryStore();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -44,6 +45,13 @@ export default function HomeScreen() {
   const loadData = async () => {
     try {
       await fetchJourneys();
+
+      // Show memories from the most recently active journey so this
+      // section isn't always empty.
+      const { journeys: latestJourneys } = useJourneyStore.getState();
+      if (latestJourneys.length > 0) {
+        await fetchJourneyMemories(latestJourneys[0]._id);
+      }
     } catch (error) {
       console.log(error);
     }

@@ -13,54 +13,66 @@ import { useAuthStore } from "../../src/store";
 export default function SplashScreen() {
   const loadUser = useAuthStore((state) => state.loadUser);
 
-  // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const loadingAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Entrance animations
+    // Start visual animation
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 500,
         useNativeDriver: true,
       }),
+
       Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 8,
         tension: 40,
         useNativeDriver: true,
       }),
+
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 600,
+        duration: 450,
         useNativeDriver: true,
       }),
+
       Animated.timing(loadingAnim, {
         toValue: 1,
-        duration: 3000,
+        duration: 1000,
         useNativeDriver: false,
       }),
     ]).start();
 
-    // Restore session (if any) while the splash animation plays, then
-    // route to tabs if already logged in, or to login otherwise.
     let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
 
-    loadUser().finally(() => {
-      if (cancelled) return;
-      timer = setTimeout(() => {
+    const restoreSession = async () => {
+      try {
+        await loadUser();
+
+        if (cancelled) return;
+
         const { isAuthenticated } = useAuthStore.getState();
-        router.replace(isAuthenticated ? "/(tabs)" : "/(auth)/login");
-      }, 3000);
-    });
+
+        if (isAuthenticated) {
+          router.replace("/(tabs)");
+        } else {
+          router.replace("/(auth)/login");
+        }
+      } catch {
+        if (!cancelled) {
+          router.replace("/(auth)/login");
+        }
+      }
+    };
+
+    restoreSession();
 
     return () => {
       cancelled = true;
-      if (timer) clearTimeout(timer);
     };
   }, []);
 
@@ -112,7 +124,7 @@ export default function SplashScreen() {
             Where Memories Become Chapters
           </Text>
 
-          {/* Bottom */}
+          {/* Loading */}
           <View style={styles.bottomSection}>
             <View style={styles.loadingContainer}>
               <Animated.View
@@ -129,7 +141,7 @@ export default function SplashScreen() {
             </View>
 
             <Text style={styles.tagline}>
-              ✨ Every memory tells a story
+              Every memory tells a story
             </Text>
 
             <View style={styles.dotsContainer}>
@@ -162,7 +174,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
   },
 
-  // Logo
   logoWrapper: {
     position: "relative",
     marginBottom: 24,
@@ -195,7 +206,6 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
 
-  // Title
   title: {
     fontSize: 44,
     fontWeight: "700",
@@ -210,7 +220,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
 
-  // Divider
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -233,7 +242,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
 
-  // Subtitle
   subtitle: {
     fontSize: 16,
     color: "rgba(255,255,255,0.9)",
@@ -242,7 +250,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // Bottom
   bottomSection: {
     alignItems: "center",
     marginTop: 20,

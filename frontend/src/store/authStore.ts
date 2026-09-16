@@ -14,7 +14,6 @@ import {
 interface AuthState {
   user: User | null;
   token: string | null;
-
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -25,16 +24,14 @@ interface AuthState {
   loadUser: () => Promise<void>;
 
   updateUser: (user: Partial<User>) => void;
-
   clearError: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
       token: null,
-
       isAuthenticated: false,
       isLoading: false,
       error: null,
@@ -50,10 +47,10 @@ export const useAuthStore = create<AuthState>()(
         });
 
         try {
-          const response = await authService.login(credentials);
-          console.log("Response:", JSON.stringify(response, null, 2));
-          console.log("Token:", response.token);
-          console.log("Token type:", typeof response.token);
+          const response = await authService.login({
+            email: credentials.email.trim().toLowerCase(),
+            password: credentials.password,
+          });
 
           await tokenManager.setToken(response.token);
 
@@ -65,12 +62,15 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           });
         } catch (error: any) {
+          const message =
+            error?.message || "Unable to login. Please try again.";
+
           set({
             isLoading: false,
-            error: error.message || "Login failed",
+            error: message,
           });
 
-          throw error;
+          throw new Error(message);
         }
       },
 
@@ -85,7 +85,11 @@ export const useAuthStore = create<AuthState>()(
         });
 
         try {
-          const response = await authService.register(data);
+          const response = await authService.register({
+            ...data,
+            fullName: data.fullName.trim(),
+            email: data.email.trim().toLowerCase(),
+          });
 
           await tokenManager.setToken(response.token);
 
@@ -97,17 +101,20 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           });
         } catch (error: any) {
+          const message =
+            error?.message || "Unable to create account. Please try again.";
+
           set({
             isLoading: false,
-            error: error.message || "Registration failed",
+            error: message,
           });
 
-          throw error;
+          throw new Error(message);
         }
       },
 
       // ==========================
-      // LOAD USER
+      // RESTORE SESSION
       // ==========================
 
       loadUser: async () => {
@@ -119,6 +126,7 @@ export const useAuthStore = create<AuthState>()(
               user: null,
               token: null,
               isAuthenticated: false,
+              isLoading: false,
             });
 
             return;
@@ -130,14 +138,18 @@ export const useAuthStore = create<AuthState>()(
             user: response.user,
             token,
             isAuthenticated: true,
+            isLoading: false,
+            error: null,
           });
-        } catch {
+        } catch (error) {
           await tokenManager.removeToken();
 
           set({
             user: null,
             token: null,
             isAuthenticated: false,
+            isLoading: false,
+            error: null,
           });
         }
       },
@@ -153,6 +165,7 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           token: null,
           isAuthenticated: false,
+          isLoading: false,
           error: null,
         });
       },
@@ -172,20 +185,25 @@ export const useAuthStore = create<AuthState>()(
         }));
       },
 
-      clearError: () =>
+      // ==========================
+      // CLEAR ERROR
+      // ==========================
+
+      clearError: () => {
         set({
           error: null,
-        }),
+        });
+      },
     }),
 
     {
       name: "auth-storage",
-
       storage: createJSONStorage(() => AsyncStorage),
 
+      // Do NOT persist the token here.
+      // The actual JWT is stored securely using Expo SecureStore.
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
     }

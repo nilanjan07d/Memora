@@ -1,5 +1,10 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User.model');
+
+const {
+  sendPasswordResetEmail,
+} = require('../services/email.service');
 
 // Generate JWT
 const generateToken = (id) => {
@@ -106,6 +111,147 @@ const login = async (req, res) => {
   }
 };
 
+// @desc    Request password reset
+// @route   POST /api/v1/auth/forgot-password
+// @access  Public
+const forgotPassword = async (req, res) => {
+  try {
+    const email = req.body.email?.trim().toLowerCase();
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required',
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    // Always return the same message so people cannot use this
+    // endpoint to discover which emails have accounts.
+    if (!user) {
+      return res.json({
+        success: true,
+        message: 'If an account exists with this email, a reset link has been sent.',
+      });
+    }
+
+    // Generate a random token.
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    // Store only the hash of the token in MongoDB.
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    user.passwordResetToken = hashedToken;
+    user.passwordResetExpires = new Date(
+      Date.now() +
+        (Number(process.env.PASSWORD_RESET_EXPIRES_MINUTES) || 15) * 60 * 1000
+    );
+
+    await user.save();
+
+    // This URL will be handled by the mobile app later.
+    const resetUrl =
+          `memora://reset-password?token=${resetToken}`;
+    try {
+      await sendPasswordResetEmail(user.email, resetUrl);
+
+      return res.json({
+        success: true,
+        message: 'If an account exists with this email, a reset link has been sent.',
+      });
+    } catch (emailError) {
+      // Remove the token if the email could not be sent.
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save();
+
+      console.error('Password reset email error:', emailError);
+
+      return res.status(500).json({
+        success: false,
+        message: 'Unable to send password reset email. Please try again later.',
+      });
+    }
+  } catch (error) {
+    console.error('Forgot password error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Something went wrong. Please try again later.',
+    });
+  }
+};
+
+// @desc    Reset password
+// @route   POST /api/v1/auth/reset-password/:token
+// @access  Public
+const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reset token is required',
+      });
+    }
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters',
+      });
+    }
+
+    // Hash the token received from the user.
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: {
+        $gt: new Date(),
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reset link is invalid or has expired',
+      });
+    }
+
+    // Set the new password.
+    // UserSchema.pre('save') will automatically hash it.
+    user.password = password;
+
+    // Invalidate the reset token immediately.
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully. You can now log in.',
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Unable to reset password. Please try again later.',
+    });
+  }
+};
+
 // @desc    Get current user
 // @route   GET /api/v1/auth/me
 // @access  Private
@@ -152,6 +298,8 @@ const updateProfile = async (req, res) => {
 module.exports = {
   register,
   login,
+  forgotPassword,
+  resetPassword,
   getMe,
   updateProfile,
 };

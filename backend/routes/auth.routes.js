@@ -10,6 +10,7 @@ const {
 } = require('../controllers/auth.controller');
 
 const { protect } = require('../middleware/auth.middleware');
+const { upload } = require('../middleware/upload.middleware');
 
 const router = express.Router();
 
@@ -20,6 +21,6 @@ router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
 
 router.get('/me', protect, getMe);
-router.put('/update', protect, updateProfile);
+router.put('/update', protect, upload.single('profilePicture'), updateProfile);
 
 module.exports = router;

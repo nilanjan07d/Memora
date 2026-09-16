@@ -38,8 +38,12 @@ export default function MemoryDetailScreen() {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
-          await deleteMemory(memoryId);
-          router.back();
+          try {
+            await deleteMemory(memoryId);
+            router.back();
+          } catch (error: any) {
+            Alert.alert('Could not delete memory', error.message || 'Please try again.');
+          }
         },
       },
     ]);
@@ -69,7 +73,7 @@ export default function MemoryDetailScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Image source={{ uri: currentMemory.imageUrl }} style={styles.image} />
+        <Image source={{ uri: currentMemory.imageUrl }} style={styles.image} onError={() => Alert.alert('Image unavailable', 'This photo could not be loaded. Please try again later.')} />
 
         <View style={styles.content}>
           {/* User Info */}

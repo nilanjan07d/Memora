@@ -88,7 +88,7 @@ export default function ForgotPasswordScreen() {
 
         <Text style={styles.subtitle}>
           Enter the email address associated with your Memora account.
-          We'll send you a link to reset your password.
+          We&apos;ll send you a link to reset your password.
         </Text>
 
         {/* Email */}

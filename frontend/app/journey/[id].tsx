@@ -118,13 +118,13 @@ export default function JourneyDetailScreen() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {currentJourney.title}
         </Text>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="share-outline" size={24} color={Colors.text.primary} />
+        <TouchableOpacity style={styles.headerButton} onPress={() => router.push(`/journey/${journeyId}/members`)}>
+          <Ionicons name="people-outline" size={24} color={Colors.text.primary} />
         </TouchableOpacity>
       </View>
 
       {/* Cover */}
-      <Image source={{ uri: currentJourney.coverImage }} style={styles.coverImage} />
+      {currentJourney.coverImage ? <Image source={{ uri: currentJourney.coverImage }} style={styles.coverImage} /> : <View style={[styles.coverImage, { backgroundColor: Colors.border.light }]} />}
 
       {/* Info */}
       <View style={styles.info}>

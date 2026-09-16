@@ -42,15 +42,15 @@ export const authService = {
 
   // Update Profile
   async updateProfile(
-    data: Partial<User>
+    data: Partial<User> | FormData
   ): Promise<{
     success: boolean;
     user: User;
   }> {
-    return await apiClient.put(
-      "/auth/update",
-      data
-    );
+    if (data instanceof FormData) {
+      return await apiClient.put('/auth/update', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+    }
+    return await apiClient.put('/auth/update', data);
   },
 
   // Local Logout

@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Dimensions,
   RefreshControl,
 } from "react-native";
 import { router } from "expo-router";
@@ -19,8 +18,6 @@ import {
 } from "../../src/store";
 
 import { Colors } from "../../src/theme";
-
-const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
   const { user } = useAuthStore();
@@ -38,11 +35,7 @@ export default function HomeScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  async function loadData() {
     try {
       await fetchJourneys();
 
@@ -52,10 +45,14 @@ export default function HomeScreen() {
       if (latestJourneys.length > 0) {
         await fetchJourneyMemories(latestJourneys[0]._id);
       }
-    } catch (error) {
-      console.log(error);
+    } catch {
+      // The stores retain an actionable error state for the screen to display.
     }
-  };
+  }
+
+  useEffect(() => {
+    void loadData();
+  }, [fetchJourneys, fetchJourneyMemories]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -118,7 +115,7 @@ export default function HomeScreen() {
     return new Date(
       memory.memoryDate ||
         memory.createdAt ||
-        Date.now()
+        0
     );
   };
 
@@ -161,7 +158,7 @@ export default function HomeScreen() {
     </Text>
   </View>
 
-  <TouchableOpacity style={styles.notificationButton}>
+  <TouchableOpacity style={styles.notificationButton} onPress={() => router.push('/notifications')}>
     <Ionicons
       name="notifications-outline"
       size={24}

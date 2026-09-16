@@ -1,0 +1,15 @@
+import { useCallback, useEffect, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import { notificationService } from '../src/services/notification.service';
+import { useJourneyStore } from '../src/store';
+import { Colors } from '../src/theme';
+
+export default function NotificationsScreen() {
+  const [items, setItems] = useState<any[]>([]), [loading, setLoading] = useState(true); const { fetchJourneys } = useJourneyStore();
+  const load = useCallback(async () => { setLoading(true); try { const response: any = await notificationService.getAll(); setItems(response.notifications || []); } catch (error: any) { Alert.alert('Could not load notifications', error.message); } finally { setLoading(false); } }, []);
+  useEffect(() => { const timer = setTimeout(() => { void load(); }, 0); return () => clearTimeout(timer); }, [load]);
+  const respond = async (id: string, action: 'accept' | 'reject') => { try { await notificationService.respond(id, action); await fetchJourneys(); await load(); } catch (error: any) { Alert.alert('Could not update invitation', error.message); } };
+  return <View style={s.container}><View style={s.header}><TouchableOpacity onPress={() => router.back()}><Text>Back</Text></TouchableOpacity><Text style={s.title}>Notifications</Text><View /></View>{loading ? <ActivityIndicator style={s.loader} color={Colors.primary.main} /> : <FlatList data={items} keyExtractor={(item) => item._id} contentContainerStyle={items.length ? undefined : s.empty} ListEmptyComponent={<Text>No notifications yet.</Text>} renderItem={({ item }) => <View style={s.card}><Text style={s.message}>{item.senderId?.fullName || 'Someone'} invited you to {item.journeyId?.title || 'a journey'}.</Text>{item.message ? <Text>{item.message}</Text> : null}{item.status === 'pending' && <View style={s.actions}><TouchableOpacity style={s.accept} onPress={() => respond(item._id, 'accept')}><Text style={s.actionText}>Accept</Text></TouchableOpacity><TouchableOpacity style={s.reject} onPress={() => respond(item._id, 'reject')}><Text>Reject</Text></TouchableOpacity></View>}<Text style={s.status}>{item.status}</Text></View>} />}</View>;
+}
+const s = StyleSheet.create({ container: { flex: 1, backgroundColor: Colors.background.primary }, header: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', backgroundColor: Colors.background.secondary }, title: { fontSize: 20, fontWeight: '700' }, loader: { marginTop: 30 }, empty: { flexGrow: 1, alignItems: 'center', justifyContent: 'center' }, card: { margin: 12, padding: 16, borderRadius: 12, backgroundColor: Colors.background.secondary }, message: { fontWeight: '600', marginBottom: 5 }, actions: { flexDirection: 'row', gap: 8, marginTop: 12 }, accept: { backgroundColor: Colors.primary.main, borderRadius: 8, padding: 10 }, reject: { borderWidth: 1, borderColor: Colors.border.light, borderRadius: 8, padding: 10 }, actionText: { color: '#fff' }, status: { textTransform: 'capitalize', color: Colors.text.tertiary, marginTop: 8 } });

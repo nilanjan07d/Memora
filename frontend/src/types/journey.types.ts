@@ -1,5 +1,4 @@
 import { User } from "./auth.types";
-import { Memory } from "./memory.types";
 
 // ===============================
 // Journey
@@ -17,9 +16,9 @@ export interface Journey {
   startDate: string;
   endDate: string;
 
-  owner: User | string;
+  ownerId: User | string;
 
-  members: User[];
+  members: { userId: User | string; role: 'admin' | 'member' | 'viewer'; joinedAt: string }[];
 
   memoryCount?: number;
 

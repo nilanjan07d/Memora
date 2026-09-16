@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,6 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuthStore, useJourneyStore } from '../../src/store';
@@ -33,13 +32,6 @@ export default function ProfileScreen() {
     members: 0,
   };
 
-  useEffect(() => {
-    if (user) {
-      setNewName(user.fullName || '');
-      setNewBio(user.bio || '');
-    }
-  }, [user]);
-
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -57,9 +49,15 @@ export default function ProfileScreen() {
     if (!result.canceled) {
       setIsLoading(true);
       try {
-        updateUser({ profilePicture: result.assets[0].uri });
+        const formData = new FormData();
+        formData.append('profilePicture', {
+          uri: result.assets[0].uri,
+          name: 'profile.jpg',
+          type: 'image/jpeg',
+        } as any);
+        await updateUser(formData);
         Alert.alert('Success', 'Profile picture updated!');
-      } catch (error) {
+    } catch {
         Alert.alert('Error', 'Failed to update profile picture');
       } finally {
         setIsLoading(false);
@@ -125,7 +123,11 @@ export default function ProfileScreen() {
 
         <TouchableOpacity
           style={[styles.editButton, { borderColor: Colors.primary.main }]}
-          onPress={() => setEditModalVisible(true)}
+          onPress={() => {
+            setNewName(user?.fullName || '');
+            setNewBio(user?.bio || '');
+            setEditModalVisible(true);
+          }}
         >
           <Ionicons name="create-outline" size={18} color={Colors.primary.main} />
           <Text style={[styles.editButtonText, { color: Colors.primary.main }]}>

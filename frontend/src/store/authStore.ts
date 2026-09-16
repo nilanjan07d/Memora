@@ -23,7 +23,7 @@ interface AuthState {
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
 
-  updateUser: (user: Partial<User>) => void;
+  updateUser: (user: Partial<User> | FormData) => Promise<void>;
   clearError: () => void;
 }
 
@@ -174,15 +174,9 @@ export const useAuthStore = create<AuthState>()(
       // UPDATE USER
       // ==========================
 
-      updateUser: (userData) => {
-        set((state) => ({
-          user: state.user
-            ? {
-                ...state.user,
-                ...userData,
-              }
-            : null,
-        }));
+      updateUser: async (userData) => {
+        const response = await authService.updateProfile(userData);
+        set({ user: response.user, error: null });
       },
 
       // ==========================

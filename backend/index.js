@@ -5,6 +5,7 @@ const { connectDB } = require('./config/database');
 const authRoutes = require('./routes/auth.routes');
 const journeyRoutes = require('./routes/journey.routes');
 const memoryRoutes = require('./routes/memory.routes');
+const notificationRoutes = require('./routes/notification.routes');
 const { errorHandler } = require('./middleware/error.middleware');
 
 dotenv.config();
@@ -13,16 +14,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+const allowedOrigins = [process.env.FRONTEND_URL, 'http://localhost:8081', 'http://10.0.2.2:8081'].filter(Boolean);
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:8081',
-    'http://192.168.0.106:5000',     // Your backend
-    'http://192.168.0.106:8081',     // Your frontend
-    'http://10.0.2.2:5000',          // Android emulator
-    'http://10.0.2.2:8081',          // Android emulator frontend
-    /^exp:\/\/192\.168\.0\.106:\d+$/ // Expo Go
-  ],
-  credentials: true
+  origin(origin, callback) {
+    // Native clients have no Origin header. Local Expo hosts vary by LAN IP.
+    if (!origin || allowedOrigins.includes(origin) || /^exp:\/\/(?:\d{1,3}\.){3}\d{1,3}:\d+$/.test(origin) || /^http:\/\/(?:192\.168|10\.)\./.test(origin)) return callback(null, true);
+    return callback(new Error('Origin not allowed by CORS'));
+  },
+  credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -31,6 +30,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/journeys', journeyRoutes);
 app.use('/api/v1/memories', memoryRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

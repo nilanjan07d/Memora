@@ -19,9 +19,17 @@ const JourneySchema = new mongoose.Schema(
       default: '', // ✅ Make it optional with a default value
       // Remove the required: true line
     },
+    coverImagePublicId: {
+      type: String,
+      default: '',
+    },
     location: {
       type: String,
       trim: true,
+    },
+    coordinates: {
+      latitude: Number,
+      longitude: Number,
     },
     startDate: {
       type: Date,

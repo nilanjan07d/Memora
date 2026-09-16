@@ -21,7 +21,8 @@ export interface Memory {
 
   memoryDate: string;
 
-  journey: Journey | string;
+  journeyId: Journey | string;
+  journey?: Journey | string;
 
   uploadedBy: User | string;
 

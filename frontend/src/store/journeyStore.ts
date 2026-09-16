@@ -5,7 +5,6 @@ import { journeyService } from "../services/journey.service";
 import {
   Journey,
   JourneyState,
-  InviteMemberData,
 } from "../types/journey.types";
 
 interface JourneyStore extends JourneyState {

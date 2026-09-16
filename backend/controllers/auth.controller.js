@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User.model');
+const cloudinary = require('../config/cloudinary');
+const { removeTemporaryFile, destroyCloudinaryImage } = require('../utils/uploads');
 
 const {
   sendPasswordResetEmail,
@@ -29,8 +31,12 @@ const register = async (req, res) => {
       });
     }
 
-    // Create username from email
-    const username = email.split('@')[0];
+    // Create a unique default username. MongoDB's unique index remains the
+    // final authority if two registrations race.
+    const baseUsername = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') || 'traveler';
+    let username = baseUsername;
+    let suffix = 1;
+    while (await User.exists({ username })) username = `${baseUsername}${suffix++}`;
 
     // Create user
     const user = await User.create({
@@ -276,22 +282,36 @@ const getMe = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const { fullName, bio, username } = req.body;
-
-    const user = await User.findByIdAndUpdate(
-      req.user._id.toString(),
-      { fullName, bio, username },
-      { new: true, runValidators: true }
-    ).select('-password');
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (fullName !== undefined) user.fullName = fullName.trim();
+    if (bio !== undefined) user.bio = bio.trim();
+    if (username !== undefined) {
+      const normalizedUsername = username.trim().toLowerCase();
+      if (!normalizedUsername) return res.status(400).json({ success: false, message: 'Username cannot be empty' });
+      const existing = await User.findOne({ username: normalizedUsername, _id: { $ne: user._id } });
+      if (existing) return res.status(409).json({ success: false, message: 'Username already exists' });
+      user.username = normalizedUsername;
+    }
+    if (req.file) {
+      let image;
+      try { image = await cloudinary.uploader.upload(req.file.path, { folder: 'memora/profiles', resource_type: 'image', transformation: [{ width: 512, height: 512, crop: 'fill', quality: 'auto' }] }); }
+      finally { await removeTemporaryFile(req.file); }
+      const oldPublicId = user.profilePicturePublicId;
+      user.profilePicture = image.secure_url;
+      user.profilePicturePublicId = image.public_id;
+      await destroyCloudinaryImage(oldPublicId);
+    }
+    await user.save();
 
     res.json({
       success: true,
-      user,
+      user: user.toObject({ versionKey: false }),
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Server error',
-    });
+    await removeTemporaryFile(req.file);
+    if (error.code === 11000) return res.status(409).json({ success: false, message: 'Username already exists' });
+    res.status(500).json({ success: false, message: error.message || 'Server error' });
   }
 };
 

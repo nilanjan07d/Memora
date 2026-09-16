@@ -36,6 +36,10 @@ export const journeyService = {
     );
   },
 
+  async searchUsers(query: string) {
+    return await apiClient.get(`/journeys/users/search?query=${encodeURIComponent(query)}`);
+  },
+
   async removeMember(
     journeyId: string,
     userId: string

@@ -5,6 +5,7 @@ const {
   getJourney,
   updateJourney,
   deleteJourney,
+  searchUsers,
   inviteMember,
   removeMember,
 } = require('../controllers/journey.controller');
@@ -14,6 +15,8 @@ const { upload } = require('../middleware/upload.middleware');
 const router = express.Router();
 
 router.use(protect);
+
+router.get('/users/search', searchUsers);
 
 router.route('/')
   .get(getJourneys)

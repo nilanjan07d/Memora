@@ -34,19 +34,18 @@ const protect = async (req, res, next) => {
     }
 
     req.user = user;
-    console.log("Authenticated user:", req.user.email);
     next();
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      return res.status(401).json({
-        success: false,
-        message: 'Not authorized, invalid token',
-      });
-    }
     if (error instanceof jwt.TokenExpiredError) {
       return res.status(401).json({
         success: false,
         message: 'Not authorized, token expired',
+      });
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized, invalid token',
       });
     }
     return res.status(401).json({

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,10 +13,10 @@ import { useAuthStore } from "../../src/store";
 export default function SplashScreen() {
   const loadUser = useAuthStore((state) => state.loadUser);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-  const loadingAnim = useRef(new Animated.Value(0)).current;
+  const [fadeAnim] = useState(() => new Animated.Value(0));
+  const [scaleAnim] = useState(() => new Animated.Value(0.8));
+  const [slideAnim] = useState(() => new Animated.Value(30));
+  const [loadingAnim] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     // Start visual animation
@@ -74,7 +74,7 @@ export default function SplashScreen() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [fadeAnim, loadUser, loadingAnim, scaleAnim, slideAnim]);
 
   return (
     <ImageBackground

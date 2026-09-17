@@ -24,13 +24,13 @@ export const journeyService = {
 
   async inviteMember(
     journeyId: string,
-    email: string,
+    userId: string,
     message?: string
   ) {
     return await apiClient.post(
       `/journeys/${journeyId}/invite`,
       {
-        email,
+        userId,
         message,
       }
     );

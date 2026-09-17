@@ -80,7 +80,10 @@ const inviteMember = async (req, res, next) => {
     const journey = await Journey.findById(req.params.id);
     if (!journey) return res.status(404).json({ success: false, message: 'Journey not found.' });
     if (!isAdmin(journey, req.user._id)) return res.status(403).json({ success: false, message: 'Only journey admins can invite people.' });
-    const user = req.body.userId ? await User.findById(req.body.userId) : await User.findOne({ email: req.body.email?.trim().toLowerCase() });
+    const userId = typeof req.body?.userId === 'string' ? req.body.userId.trim() : '';
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    if (!userId && !email) return res.status(400).json({ success: false, message: 'Select a user to invite.' });
+    const user = userId ? await User.findById(userId) : await User.findOne({ email });
     if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
     if (isMember(journey, user._id)) return res.status(400).json({ success: false, message: 'This user is already a member.' });
     if (await Notification.exists({ recipientId: user._id, journeyId: journey._id, type: 'journey_invitation', status: 'pending' })) return res.status(409).json({ success: false, message: 'An invitation is already pending.' });

@@ -5,12 +5,13 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Image,
   Alert,
   ActivityIndicator,
   StyleSheet,
   Keyboard,
+  Pressable,
 } from "react-native";
+import { Image } from "expo-image";
 
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -354,6 +355,17 @@ export default function CreateJourneyScreen() {
   ------------------------------------------------------- */
 
   return (
+    <Pressable
+      style={styles.container}
+      onPress={() => {
+        // Tapping anywhere outside the location field/dropdown closes the
+        // suggestions list, matching how a dropdown should behave. Taps on
+        // the input or a suggestion itself are handled by those elements
+        // directly and never reach this handler.
+        setSuggestions([]);
+        Keyboard.dismiss();
+      }}
+    >
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
@@ -614,6 +626,7 @@ export default function CreateJourneyScreen() {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </Pressable>
   );
 }
 

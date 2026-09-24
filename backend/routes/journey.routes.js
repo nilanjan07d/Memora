@@ -8,6 +8,8 @@ const {
   searchUsers,
   inviteMember,
   removeMember,
+  getJourneyInvites,
+  cancelInvite,
 } = require('../controllers/journey.controller');
 const { protect } = require('../middleware/auth.middleware');
 const { upload } = require('../middleware/upload.middleware');
@@ -28,6 +30,8 @@ router.route('/:id')
   .delete(deleteJourney);
 
 router.post('/:id/invite', inviteMember);
+router.get('/:id/invites', getJourneyInvites);
+router.delete('/:id/invites/:inviteId', cancelInvite);
 router.delete('/:id/members/:userId', removeMember);
 
 module.exports = router;

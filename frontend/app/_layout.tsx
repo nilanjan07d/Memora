@@ -16,7 +16,10 @@ export default function RootLayout() {
         <Stack.Screen name="journey/[id]" />
         <Stack.Screen name="journey/[id]/members" />
         <Stack.Screen name="memory/[id]" />
+        <Stack.Screen name="memory/[id]/edit" />
         <Stack.Screen name="notifications" />
+        <Stack.Screen name="help-support" />
+        <Stack.Screen name="privacy-policy" />
       </Stack>
     </>
   );

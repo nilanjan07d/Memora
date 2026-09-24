@@ -11,7 +11,7 @@ export const Colors = {
     dark: '#D48A8A',
   },
   brand: {
-    main: '#EEESSF',      // Warm cream/gold
+    main: '#EFE6D8',      // Warm cream/gold
     light: '#F5F0E8',
     dark: '#D5D0C8',
   },

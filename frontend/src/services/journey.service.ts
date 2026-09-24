@@ -48,4 +48,14 @@ export const journeyService = {
       `/journeys/${journeyId}/members/${userId}`
     );
   },
+
+  async getInvites(journeyId: string) {
+    return await apiClient.get(`/journeys/${journeyId}/invites`);
+  },
+
+  async cancelInvite(journeyId: string, inviteId: string) {
+    return await apiClient.delete(
+      `/journeys/${journeyId}/invites/${inviteId}`
+    );
+  },
 };

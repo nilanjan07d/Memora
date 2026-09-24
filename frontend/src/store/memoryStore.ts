@@ -23,7 +23,7 @@ interface MemoryStore extends MemoryState {
 
   updateMemory: (
     id: string,
-    data: Partial<Memory>
+    data: Partial<Memory> | FormData
   ) => Promise<void>;
 
   deleteMemory: (
@@ -175,7 +175,7 @@ export const useMemoryStore =
 
     updateMemory: async (
       id: string,
-      data: Partial<Memory>
+      data: Partial<Memory> | FormData
     ) => {
       set({
         isLoading: true,

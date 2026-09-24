@@ -19,8 +19,13 @@ export const memoryService = {
 
   async update(
     id: string,
-    data: Partial<Memory>
+    data: Partial<Memory> | FormData
   ) {
+    if (data instanceof FormData) {
+      return await apiClient.put(`/memories/${id}`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    }
     return await apiClient.put(
       `/memories/${id}`,
       data

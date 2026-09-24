@@ -134,7 +134,11 @@ export const useJourneyStore =
         const response: any =
           await journeyService.create(data);
 
-        const newJourney = response.data;
+        // The API exposes the created journey as `{ success, journey }`, not
+        // under `data`. Reading `response.data` here left `undefined` in the
+        // journeys list, which is what caused crashes right after creating a
+        // journey ("Cannot read property 'coverImage' of undefined").
+        const newJourney = response.journey;
         set((state) => ({
           journeys: [newJourney, ...state.journeys],
           currentJourney: newJourney,

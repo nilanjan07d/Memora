@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
   Dimensions,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useMemoryStore } from '../../src/store';
@@ -67,9 +67,17 @@ export default function MemoryDetailScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.headerButton} onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+        <View style={styles.headerRightButtons}>
+          <TouchableOpacity
+            style={[styles.headerButton, { marginRight: 10 }]}
+            onPress={() => router.push(`/memory/${memoryId}/edit`)}
+          >
+            <Ionicons name="pencil-outline" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerButton} onPress={handleDelete}>
+            <Ionicons name="trash-outline" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -182,6 +190,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerRightButtons: { flexDirection: 'row' },
 
   image: { width: width, height: width, backgroundColor: Colors.border.light },
 

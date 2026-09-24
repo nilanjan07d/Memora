@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Switch,
   Alert,
   Image,
   TextInput,
@@ -13,18 +12,20 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuthStore, useJourneyStore } from '../../src/store';
+import { notificationService } from '../../src/services/notification.service';
 import { Colors } from '../../src/theme';
 
 export default function ProfileScreen() {
   const { user, logout, updateUser } = useAuthStore();
   const { journeys } = useJourneyStore();
-  const [isDark, setIsDark] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [newName, setNewName] = useState('');
   const [newBio, setNewBio] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const stats = {
     journeys: journeys.length,
@@ -32,7 +33,37 @@ export default function ProfileScreen() {
     members: 0,
   };
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const response: any = await notificationService.getAll();
+        if (!cancelled) setUnreadCount(response.unreadCount || 0);
+      } catch {
+        // Silently ignore - the badge just won't show a count.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSignOut = () => {
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: async () => {
+          await logout();
+          router.replace('/(auth)/login');
+        },
+      },
+    ]);
+  };
+
   const pickImage = async () => {
+    if (isLoading) return;
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       Alert.alert('Permission Required', 'Please grant camera roll permissions');
@@ -157,35 +188,22 @@ export default function ProfileScreen() {
       <View style={styles.menuSection}>
         <Text style={styles.menuTitle}>Settings</Text>
 
-        <View style={styles.menuItem}>
-          <View style={styles.menuLeft}>
-            <View style={[styles.menuIcon, { backgroundColor: '#F5EDE8' }]}>
-              <Ionicons name="moon-outline" size={20} color={Colors.primary.main} />
-            </View>
-            <Text style={styles.menuText}>Dark Mode</Text>
-          </View>
-          <Switch
-            value={isDark}
-            onValueChange={setIsDark}
-            trackColor={{ false: Colors.border.light, true: Colors.primary.main }}
-            thumbColor={isDark ? Colors.primary.main : '#FFFFFF'}
-          />
-        </View>
-
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/notifications')}>
           <View style={styles.menuLeft}>
             <View style={[styles.menuIcon, { backgroundColor: '#F5EDE8' }]}>
               <Ionicons name="notifications-outline" size={20} color={Colors.primary.main} />
             </View>
             <Text style={styles.menuText}>Notifications</Text>
           </View>
-          <View style={[styles.menuBadge, { backgroundColor: Colors.accent.pink }]}>
-            <Text style={styles.menuBadgeText}>3</Text>
-          </View>
+          {unreadCount > 0 && (
+            <View style={[styles.menuBadge, { backgroundColor: Colors.accent.pink }]}>
+              <Text style={styles.menuBadgeText}>{unreadCount}</Text>
+            </View>
+          )}
           <Ionicons name="chevron-forward" size={20} color={Colors.text.tertiary} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/help-support' as any)}>
           <View style={styles.menuLeft}>
             <View style={[styles.menuIcon, { backgroundColor: '#F5EDE8' }]}>
               <Ionicons name="help-circle-outline" size={20} color={Colors.primary.main} />
@@ -195,22 +213,19 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color={Colors.text.tertiary} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/privacy-policy' as any)}>
           <View style={styles.menuLeft}>
             <View style={[styles.menuIcon, { backgroundColor: '#F5EDE8' }]}>
-              <Ionicons name="trophy-outline" size={20} color={Colors.accent.pink} />
+              <Ionicons name="shield-checkmark-outline" size={20} color={Colors.primary.main} />
             </View>
-            <Text style={styles.menuText}>Achievements</Text>
-          </View>
-          <View style={[styles.menuBadge, { backgroundColor: Colors.accent.pink }]}>
-            <Text style={styles.menuBadgeText}>5</Text>
+            <Text style={styles.menuText}>Privacy Policy</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={Colors.text.tertiary} />
         </TouchableOpacity>
       </View>
 
       {/* Logout */}
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
         <Ionicons name="log-out-outline" size={22} color={Colors.accent.pink} />
         <Text style={[styles.logoutText, { color: Colors.accent.pink }]}>Sign Out</Text>
       </TouchableOpacity>
@@ -224,8 +239,12 @@ export default function ProfileScreen() {
         transparent={true}
         onRequestClose={() => setEditModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setEditModalVisible(false)}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit Profile</Text>
               <TouchableOpacity onPress={() => setEditModalVisible(false)}>
@@ -279,8 +298,8 @@ export default function ProfileScreen() {
                 <Text style={styles.modalSaveText}>Save Changes</Text>
               )}
             </TouchableOpacity>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </ScrollView>
   );

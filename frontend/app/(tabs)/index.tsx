@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   RefreshControl,
   TextInput,
 } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -37,54 +37,71 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const normalizedSearch =
-    searchQuery.trim().toLowerCase();
+  const normalizedSearch = useMemo(
+    () => searchQuery.trim().toLowerCase(),
+    [searchQuery]
+  );
 
   /*
    * Remove invalid/undefined journey entries first.
    *
    * This prevents:
    * Cannot read property 'coverImage' of undefined
+   *
+   * Memoized so this list (and everything derived from it below) is only
+   * recomputed when the underlying data actually changes, instead of on
+   * every render - the app was re-filtering these arrays from scratch on
+   * every keystroke and re-render, which added up on slower devices.
    */
-  const validJourneys = Array.isArray(journeys)
-    ? journeys.filter(Boolean)
-    : [];
+  const validJourneys = useMemo(
+    () => (Array.isArray(journeys) ? journeys.filter(Boolean) : []),
+    [journeys]
+  );
 
-  const validMemories = Array.isArray(memories)
-    ? memories.filter(Boolean)
-    : [];
+  const validMemories = useMemo(
+    () => (Array.isArray(memories) ? memories.filter(Boolean) : []),
+    [memories]
+  );
 
   /*
    * SEARCH JOURNEYS
    */
 
-  const visibleJourneys = normalizedSearch
-    ? validJourneys.filter((journey) =>
-        `${journey?.title || ""} ${
-          journey?.location || ""
-        } ${journey?.description || ""}`
-          .toLowerCase()
-          .includes(normalizedSearch)
-      )
-    : validJourneys.slice(0, 3);
+  const visibleJourneys = useMemo(
+    () =>
+      normalizedSearch
+        ? validJourneys.filter((journey) =>
+            `${journey?.title || ""} ${
+              journey?.location || ""
+            } ${journey?.description || ""}`
+              .toLowerCase()
+              .includes(normalizedSearch)
+          )
+        : validJourneys.slice(0, 3),
+    [validJourneys, normalizedSearch]
+  );
 
   /*
    * SEARCH MEMORIES
    */
 
-  const visibleMemories = normalizedSearch
-    ? validMemories.filter((memory) =>
-        `${memory?.caption || ""} ${
-          memory?.story || ""
-        } ${memory?.location || ""} ${
-          Array.isArray(memory?.tags)
-            ? memory.tags.join(" ")
-            : ""
-        }`
-          .toLowerCase()
-          .includes(normalizedSearch)
-      )
-    : validMemories.slice(0, 3);
+  const visibleMemories = useMemo(
+    () =>
+      normalizedSearch
+        ? validMemories.filter((memory) =>
+            `${memory?.caption || ""} ${
+              memory?.story || ""
+            } ${memory?.location || ""} ${
+              Array.isArray(memory?.tags)
+                ? memory.tags.join(" ")
+                : ""
+            }`
+              .toLowerCase()
+              .includes(normalizedSearch)
+          )
+        : validMemories.slice(0, 3),
+    [validMemories, normalizedSearch]
+  );
 
   /*
    * LOAD DATA
@@ -334,62 +351,6 @@ export default function HomeScreen() {
             />
           </TouchableOpacity>
         )}
-      </View>
-
-      {/* MEMORY CATEGORIES */}
-
-      <View style={styles.categorySection}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={
-            styles.categoryList
-          }
-        >
-          {[
-            "Memories",
-            "Summer",
-            "Family",
-            "Celebration",
-          ].map((cat, i) => (
-            <TouchableOpacity
-              key={i}
-              style={[
-                styles.categoryChip,
-                i === 0 && {
-                  backgroundColor:
-                    Colors.primary.main,
-                },
-                i === 1 && {
-                  backgroundColor:
-                    Colors.secondary.main,
-                },
-                i === 2 && {
-                  backgroundColor:
-                    Colors.accent.pink,
-                },
-                i === 3 && {
-                  backgroundColor:
-                    Colors.brand.light,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.categoryText,
-                  i < 3 && {
-                    color: "#FFFFFF",
-                  },
-                  i === 3 && {
-                    color: Colors.text.primary,
-                  },
-                ]}
-              >
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
       </View>
 
       {/* RECENT JOURNEYS */}
@@ -802,29 +763,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: Colors.text.primary,
-    fontFamily: "Inter, sans-serif",
-  },
-
-  /* CATEGORIES */
-
-  categorySection: {
-    paddingVertical: 8,
-  },
-
-  categoryList: {
-    paddingHorizontal: 20,
-    gap: 10,
-  },
-
-  categoryChip: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-
-  categoryText: {
-    fontSize: 14,
-    fontWeight: "500",
     fontFamily: "Inter, sans-serif",
   },
 

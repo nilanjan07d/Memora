@@ -5,7 +5,6 @@
 export { useAuthStore } from "./authStore";
 export { useJourneyStore } from "./journeyStore";
 export { useMemoryStore } from "./memoryStore";
-export { useUIStore } from "./uiStore";
 
 // Re-export common types once; duplicate type export declarations trigger
 // lint errors and make barrel imports ambiguous.

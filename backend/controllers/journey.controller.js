@@ -103,4 +103,27 @@ const removeMember = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-module.exports = { createJourney, getJourneys, getJourney, updateJourney, deleteJourney, searchUsers, inviteMember, removeMember };
+const getJourneyInvites = async (req, res, next) => {
+  try {
+    const journey = await Journey.findById(req.params.id);
+    if (!journey) return res.status(404).json({ success: false, message: 'Journey not found.' });
+    if (!isAdmin(journey, req.user._id)) return res.status(403).json({ success: false, message: 'Only journey admins can view invitations.' });
+    const invites = await Notification.find({ journeyId: journey._id, type: 'journey_invitation', status: 'pending' }).populate('recipientId', 'fullName email username profilePicture').sort({ createdAt: -1 });
+    res.json({ success: true, invites });
+  } catch (error) { next(error); }
+};
+
+const cancelInvite = async (req, res, next) => {
+  try {
+    const journey = await Journey.findById(req.params.id);
+    if (!journey) return res.status(404).json({ success: false, message: 'Journey not found.' });
+    if (!isAdmin(journey, req.user._id)) return res.status(403).json({ success: false, message: 'Only journey admins can cancel invitations.' });
+    const invite = await Notification.findOne({ _id: req.params.inviteId, journeyId: journey._id, type: 'journey_invitation' });
+    if (!invite) return res.status(404).json({ success: false, message: 'Invitation not found.' });
+    if (invite.status !== 'pending') return res.status(409).json({ success: false, message: 'This invitation has already been handled.' });
+    await invite.deleteOne();
+    res.json({ success: true, message: 'Invitation cancelled.' });
+  } catch (error) { next(error); }
+};
+
+module.exports = { createJourney, getJourneys, getJourney, updateJourney, deleteJourney, searchUsers, inviteMember, removeMember, getJourneyInvites, cancelInvite };

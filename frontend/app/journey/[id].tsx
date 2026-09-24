@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
@@ -12,10 +11,11 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useJourneyStore, useMemoryStore } from '../../src/store';
+import { useAuthStore, useJourneyStore, useMemoryStore } from '../../src/store';
 import { Colors } from '../../src/theme';
 
 export default function JourneyDetailScreen() {
@@ -25,6 +25,7 @@ export default function JourneyDetailScreen() {
 
   const journeyId = id;
 
+  const { user } = useAuthStore();
   const { currentJourney, fetchJourney, isLoading } = useJourneyStore();
   const { memories, fetchJourneyMemories, addMemory } = useMemoryStore();
 
@@ -34,6 +35,8 @@ export default function JourneyDetailScreen() {
   const [story, setStory] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'timeline' | 'gallery'>('timeline');
+  const [isSubmittingMemory, setIsSubmittingMemory] = useState(false);
+  const [pendingInviteCount] = useState(0);
 
   useEffect(() => {
     if (!journeyId) return;
@@ -69,10 +72,17 @@ export default function JourneyDetailScreen() {
   };
 
   const handleAddMemory = async () => {
+    // Guards against duplicate posts from a fast double-tap on "Share
+    // Memory" - without this, two taps before the first request resolves
+    // would fire two separate uploads.
+    if (isSubmittingMemory) return;
+
     if (!image || !caption.trim()) {
       Alert.alert('Error', 'Please add image and caption');
       return;
     }
+
+    setIsSubmittingMemory(true);
 
     const formData = new FormData();
     formData.append('caption', caption);
@@ -94,6 +104,8 @@ export default function JourneyDetailScreen() {
       Alert.alert('Success', 'Memory added!');
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to add memory');
+    } finally {
+      setIsSubmittingMemory(false);
     }
   };
 
@@ -140,7 +152,12 @@ export default function JourneyDetailScreen() {
           <View style={styles.collaborateIcon}><Ionicons name="people" size={17} color="#FFFFFF" /></View>
           <View style={styles.collaborateCopy}>
             <Text style={styles.collaborateTitle}>Travel together</Text>
-            <Text style={styles.collaborateSubtitle}>{currentJourney.members?.length || 1} member{currentJourney.members?.length === 1 ? '' : 's'} · Invite collaborators</Text>
+            <Text style={styles.collaborateSubtitle}>
+              {currentJourney.members?.length || 1} member{currentJourney.members?.length === 1 ? '' : 's'}
+              {pendingInviteCount > 0
+                ? ` · ${pendingInviteCount} invite${pendingInviteCount === 1 ? '' : 's'} pending`
+                : ' · Invite collaborators'}
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={19} color={Colors.primary.main} />
         </TouchableOpacity>
@@ -269,13 +286,19 @@ export default function JourneyDetailScreen() {
 
       {/* Add Memory Modal */}
       <Modal visible={showAddMemory} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => !isSubmittingMemory && setShowAddMemory(false)}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: Colors.text.primary }]}>
                 Add Memory
               </Text>
-              <TouchableOpacity onPress={() => setShowAddMemory(false)}>
+              <TouchableOpacity
+                onPress={() => !isSubmittingMemory && setShowAddMemory(false)}
+              >
                 <Ionicons name="close" size={24} color={Colors.text.primary} />
               </TouchableOpacity>
             </View>
@@ -319,13 +342,22 @@ export default function JourneyDetailScreen() {
             />
 
             <TouchableOpacity
-              style={[styles.modalButton, { backgroundColor: Colors.primary.main }]}
+              style={[
+                styles.modalButton,
+                { backgroundColor: Colors.primary.main },
+                isSubmittingMemory && styles.modalButtonDisabled,
+              ]}
               onPress={handleAddMemory}
+              disabled={isSubmittingMemory}
             >
-              <Text style={styles.modalButtonText}>Share Memory</Text>
+              {isSubmittingMemory ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.modalButtonText}>Share Memory</Text>
+              )}
             </TouchableOpacity>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -517,6 +549,9 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
+  },
+  modalButtonDisabled: {
+    opacity: 0.7,
   },
   modalButtonText: {
     color: '#FFFFFF',

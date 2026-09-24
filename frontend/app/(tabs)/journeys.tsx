@@ -1,13 +1,13 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useJourneyStore } from '../../src/store';
@@ -20,7 +20,7 @@ export default function JourneysScreen() {
     fetchJourneys();
   }, []);
 
-  const renderItem = ({ item }: { item: any }) => (
+  const renderItem = useCallback(({ item }: { item: any }) => (
   <TouchableOpacity
     style={styles.card}
     activeOpacity={0.8}
@@ -70,7 +70,7 @@ export default function JourneysScreen() {
       </View>
     </View>
   </TouchableOpacity>
-);
+), []);
   return (
     <View style={styles.container}>
       <View style={styles.header}>

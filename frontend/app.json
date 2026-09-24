@@ -18,7 +18,11 @@
         "monochromeImage": "./assets/icon.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.nilanjan07.Memora"
+      "package": "com.nilanjan07.Memora",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "output": "static",
@@ -40,7 +44,12 @@
       ],
       "@react-native-community/datetimepicker",
       "expo-secure-store",
-      ["expo-location", {"locationWhenInUsePermission": "Allow Memora to use your location to choose a journey destination."}]
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Memora to use your location to choose a journey destination."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -49,7 +58,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "34d8921f-94c9-4f14-9a65-b3ac5212316a"
+        "projectId": "c558192e-6f28-4266-a8ad-4a51cb73bbe6"
       }
     },
     "runtimeVersion": {
@@ -57,6 +66,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/34d8921f-94c9-4f14-9a65-b3ac5212316a"
-    }
+    },
+    "owner": "nilanjan07"
   }
 }
